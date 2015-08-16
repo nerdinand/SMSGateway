@@ -1,12 +1,10 @@
-package com.nerdinand.smssender;
+package com.nerdinand.smsgateway;
 
 import android.util.JsonWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 
 public class SMSMessage {
     private final String recipient;
@@ -40,7 +38,7 @@ public class SMSMessage {
 
     @Override
     public String toString() {
-        return "OutgoingMessage{" +
+        return "SMSMessage{" +
                 "recipient='" + recipient + '\'' +
                 ", text='" + text + '\'' +
                 '}';

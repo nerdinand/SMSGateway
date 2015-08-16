@@ -1,4 +1,4 @@
-package com.nerdinand.smssender;
+package com.nerdinand.smsgateway;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -26,15 +28,18 @@ public class MainActivity extends ActionBarActivity {
     private static final String SENT = "SMS_SENT";
     private static final String DELIVERED = "SMS_DELIVERED";
 
+    private TextView textTextView;
+    private ScrollView scrollView;
+
     private ServerSocket serverSocket;
     private Handler updateConversationHandler;
-    private TextView textTextView;
     private Thread serverThread;
+    private static CommunicationThread communicationThread;
     private SmsManager smsManager;
 
     private PendingIntent sentPendingIntent;
     private PendingIntent deliveredPendingIntent;
-    private static CommunicationThread communicationThread;
+
     private BroadcastReceiver sentBroadcastReceiver;
     private BroadcastReceiver deliveredBroadcastReceiver;
 
@@ -44,6 +49,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         textTextView = (TextView) findViewById(R.id.tv_text);
+        scrollView = (ScrollView) findViewById(R.id.sv_scroll_view);
 
         if (savedInstanceState == null) {
             createInitially();
@@ -235,6 +241,12 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public void run() {
             textTextView.setText(textTextView.getText().toString() + msg + "\n");
+            scrollView.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollView.fullScroll(View.FOCUS_DOWN);
+                }
+            });
         }
     }
 }

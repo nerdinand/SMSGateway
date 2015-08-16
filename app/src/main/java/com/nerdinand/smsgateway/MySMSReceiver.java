@@ -1,4 +1,4 @@
-package com.nerdinand.smssender;
+package com.nerdinand.smsgateway;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

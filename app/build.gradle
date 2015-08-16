@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.nerdinand.smssender"
+        applicationId "com.nerdinand.smsgateway"
         minSdkVersion 16
         targetSdkVersion 21
         versionCode 1
