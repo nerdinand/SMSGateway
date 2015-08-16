@@ -220,7 +220,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void sendSMS(SMSMessage smsMessage) {
-        smsManager.sendTextMessage(smsMessage.getRecipient(), null, smsMessage.getText(), sentPendingIntent, deliveredPendingIntent);
+        try {
+            smsManager.sendTextMessage(smsMessage.getSenderRecipient(), null, smsMessage.getText(), sentPendingIntent, deliveredPendingIntent);
+        } catch (IllegalArgumentException e) {
+            postString("Sending message failed: " + smsMessage);
+        }
     }
 
     private void postString(String string) {

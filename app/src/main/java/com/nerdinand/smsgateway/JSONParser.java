@@ -21,7 +21,7 @@ public class JSONParser {
         jsonReader.beginObject();
         while (jsonReader.hasNext()) {
             String attributeName = jsonReader.nextName();
-            if (attributeName.equals("recipient")) {
+            if (attributeName.equals("sender_recipient")) {
                 recipient = jsonReader.nextString();
             } else if (attributeName.equals("text")) {
                 message = jsonReader.nextString();

@@ -7,16 +7,16 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class SMSMessage {
-    private final String recipient;
+    private final String senderRecipient;
     private final String text;
 
-    public SMSMessage(String recipient, String text) {
-        this.recipient = recipient;
+    public SMSMessage(String senderRecipient, String text) {
+        this.senderRecipient = senderRecipient;
         this.text = text;
     }
 
-    public String getRecipient() {
-        return recipient;
+    public String getSenderRecipient() {
+        return senderRecipient;
     }
 
     public String getText() {
@@ -28,7 +28,7 @@ public class SMSMessage {
         JsonWriter writer = new JsonWriter(new OutputStreamWriter(byteArrayOutputStream, "UTF-8"));
 
         writer.beginObject();
-        writer.name("sender").value(recipient);
+        writer.name("sender_recipient").value(senderRecipient);
         writer.name("text").value(text);
         writer.endObject();
         writer.close();
@@ -39,7 +39,7 @@ public class SMSMessage {
     @Override
     public String toString() {
         return "SMSMessage{" +
-                "recipient='" + recipient + '\'' +
+                "sender_recipient='" + senderRecipient + '\'' +
                 ", text='" + text + '\'' +
                 '}';
     }
