@@ -33,8 +33,10 @@ public class MainActivity extends ActionBarActivity {
     private SmsManager smsManager;
 
     private PendingIntent sentPendingIntent;
-    private PendingIntent sentDeliveredPendingIntent;
+    private PendingIntent deliveredPendingIntent;
     private static CommunicationThread communicationThread;
+    private BroadcastReceiver sentBroadcastReceiver;
+    private BroadcastReceiver deliveredBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,28 +45,50 @@ public class MainActivity extends ActionBarActivity {
 
         textTextView = (TextView) findViewById(R.id.tv_text);
 
-        updateConversationHandler = new Handler();
+        if (savedInstanceState == null) {
+            createInitially();
+        }
+    }
 
-        this.serverThread = new Thread(new ServerThread());
-        this.serverThread.start();
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        updateConversationHandler = new Handler();
 
         smsManager = SmsManager.getDefault();
 
         setupIntents();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        teardownIntents();
+    }
+
+    private void teardownIntents() {
+        unregisterReceiver(sentBroadcastReceiver);
+        unregisterReceiver(deliveredBroadcastReceiver);
+    }
+
+    private void createInitially() {
+        this.serverThread = new Thread(new ServerThread());
+        this.serverThread.start();
+    }
+
     private void setupIntents() {
         sentPendingIntent = PendingIntent.getBroadcast(this, 0,
                 new Intent(SENT), 0);
 
-        sentDeliveredPendingIntent = PendingIntent.getBroadcast(this, 0,
+        deliveredPendingIntent = PendingIntent.getBroadcast(this, 0,
                 new Intent(DELIVERED), 0);
 
-        registerReceiver(new BroadcastReceiver(){
+        sentBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context arg0, Intent arg1) {
-                switch (getResultCode())
-                {
+                switch (getResultCode()) {
                     case Activity.RESULT_OK:
                         postString("SMS sent");
                         break;
@@ -82,9 +106,10 @@ public class MainActivity extends ActionBarActivity {
                         break;
                 }
             }
-        }, new IntentFilter(SENT));
+        };
+        registerReceiver(sentBroadcastReceiver, new IntentFilter(SENT));
 
-        registerReceiver(new BroadcastReceiver() {
+        deliveredBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context arg0, Intent arg1) {
                 switch (getResultCode()) {
@@ -96,7 +121,8 @@ public class MainActivity extends ActionBarActivity {
                         break;
                 }
             }
-        }, new IntentFilter(DELIVERED));
+        };
+        registerReceiver(deliveredBroadcastReceiver, new IntentFilter(DELIVERED));
     }
 
     @Override
@@ -188,7 +214,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void sendSMS(SMSMessage smsMessage) {
-        smsManager.sendTextMessage(smsMessage.getRecipient(), null, smsMessage.getText(), sentPendingIntent, sentDeliveredPendingIntent);
+        smsManager.sendTextMessage(smsMessage.getRecipient(), null, smsMessage.getText(), sentPendingIntent, deliveredPendingIntent);
     }
 
     private void postString(String string) {
