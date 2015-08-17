@@ -6,9 +6,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class MainActivity extends ActionBarActivity {
     private static final int SOCKET_PORT = 1337;
@@ -153,6 +154,16 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public static void queueIncomingSMS(SMSMessage message) {
+        MainActivity.getCommunicationThread().queueIncomingSMS(message);
+        try {
+            String json = message.toJSON();
+            MainActivity.getCommunicationThread().write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     class ServerThread implements Runnable {
         public void run() {
             Socket socket;
@@ -180,6 +191,8 @@ public class MainActivity extends ActionBarActivity {
         private BufferedReader input;
         private PrintWriter output;
 
+        private LinkedBlockingDeque<SMSMessage> messageQueue = new LinkedBlockingDeque<>();
+
         public CommunicationThread(Socket clientSocket) {
             this.clientSocket = clientSocket;
 
@@ -192,20 +205,13 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void run() {
-            String read;
+            String read = null;
             try {
-                while (!Thread.currentThread().isInterrupted() && ((read = input.readLine()) != null)) {
-                    postString(read);
-
-                    JSONParser jsonParser = new JSONParser(read);
-                    try {
-                        SMSMessage smsMessage = jsonParser.parse();
-                        postString(smsMessage.toString());
-                        sendSMS(smsMessage);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        postString("Invalid JSON");
-                        write("Invalid JSON");
+                while (!Thread.currentThread().isInterrupted() && !messageQueue.isEmpty() || ((read = input.readLine()) != null)) {
+                    if (read == null) {
+                        handleOutgoingNetwork();
+                    } else {
+                        handleIncomingNetwork(read);
                     }
                 }
             } catch (IOException e) {
@@ -213,9 +219,32 @@ public class MainActivity extends ActionBarActivity {
             }
         }
 
-        public void write(String string) {
+        private void handleOutgoingNetwork() throws IOException {
+            write(messageQueue.pop().toJSON());
+        }
+
+        private void handleIncomingNetwork(String read) {
+            postString(read);
+
+            JSONParser jsonParser = new JSONParser(read);
+            try {
+                SMSMessage smsMessage = jsonParser.parse();
+                postString(smsMessage.toString());
+                sendSMS(smsMessage);
+            } catch (IOException e) {
+                e.printStackTrace();
+                postString("Invalid JSON");
+                write("Invalid JSON");
+            }
+        }
+
+        private void write(String string) {
             output.write(string + "\n");
             output.flush();
+        }
+
+        public void queueIncomingSMS(SMSMessage message) {
+            messageQueue.push(message);
         }
     }
 
@@ -223,6 +252,7 @@ public class MainActivity extends ActionBarActivity {
         try {
             smsManager.sendTextMessage(smsMessage.getSenderRecipient(), null, smsMessage.getText(), sentPendingIntent, deliveredPendingIntent);
         } catch (IllegalArgumentException e) {
+            e.printStackTrace();
             postString("Sending message failed: " + smsMessage);
         }
     }

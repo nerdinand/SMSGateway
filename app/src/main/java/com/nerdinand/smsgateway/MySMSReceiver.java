@@ -14,11 +14,6 @@ public class MySMSReceiver extends BroadcastReceiver {
         SmsMessage shortMessage = SmsMessage.createFromPdu((byte[]) pdus[0]);
 
         SMSMessage message = new SMSMessage(shortMessage.getOriginatingAddress(), shortMessage.getDisplayMessageBody());
-        try {
-            String json = message.toJSON();
-            MainActivity.getCommunicationThread().write(json);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        MainActivity.queueIncomingSMS(message);
     }
 }
