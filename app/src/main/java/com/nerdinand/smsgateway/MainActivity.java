@@ -155,7 +155,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public static void queueIncomingSMS(SMSMessage message) {
-        MainActivity.getCommunicationThread().queueIncomingSMS(message);
         try {
             String json = message.toJSON();
             MainActivity.getCommunicationThread().write(json);
@@ -212,6 +211,7 @@ public class MainActivity extends ActionBarActivity {
                         handleOutgoingNetwork();
                     } else {
                         handleIncomingNetwork(read);
+                        read = null;
                     }
                 }
             } catch (IOException e) {
@@ -220,7 +220,9 @@ public class MainActivity extends ActionBarActivity {
         }
 
         private void handleOutgoingNetwork() throws IOException {
+            postString("queue size: " + messageQueue.size());
             write(messageQueue.pop().toJSON());
+            postString("queue size: " + messageQueue.size());
         }
 
         private void handleIncomingNetwork(String read) {
